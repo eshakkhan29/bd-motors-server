@@ -52,18 +52,19 @@ async function run() {
         });
 
         // load all data to mange
-        app.get('/products/all', verifyUser, async (req, res) => {
+        app.get('/products/all',  async (req, res) => {
             const headersEmail = req.decoded?.email;
             const email = req.query.email;
-            if (email === headersEmail) {
-                const query = {};
+            // if (email === headersEmail) {
+                
+            // }
+            const query = {};
                 const cursor = bikeCollection.find(query);
                 const products = await cursor.toArray();
                 res.send(products);
-            }
-            else {
-                res.status(403).send({ massage: 'forbidden' })
-            }
+            // else {
+            //     res.status(403).send({ massage: 'forbidden' })
+            // }
         });
 
         //  load data with id
