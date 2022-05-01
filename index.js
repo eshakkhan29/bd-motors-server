@@ -2,12 +2,29 @@ const express = require('express');
 const cors = require('cors');
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
+const jwt = require('jsonwebtoken');
+
 const app = express();
 const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors())
 app.use(express.json());
+
+const verifyUser = (req, res, next) => {
+    const headersToken = req.headers.authorization;
+    if (!headersToken) {
+        res.status(401).send({ massage: 'unAuthorize access' })
+    }
+    const token = headersToken.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
+        if (err) {
+            res.status(401).send({ massage: 'unAuthorize access' })
+        }
+        req.decoded = decoded;
+        next()
+    });
+}
 
 
 const uri = `mongodb+srv://${process.env.DATABASE_USER}:${process.env.DATABASE_PASS}@cluster0.grvhn.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
@@ -17,6 +34,15 @@ async function run() {
     try {
         await client.connect();
         const bikeCollection = client.db("Bike-details").collection("details");
+
+        // login jwt token
+        app.post('/login', async (req, res) => {
+            const user = req.body;
+            const token = jwt.sign(user, process.env.ACCESS_TOKEN);
+            res.send({ token })
+
+        });
+
         //  load all data limited
         app.get('/products', async (req, res) => {
             const query = {};
@@ -26,11 +52,18 @@ async function run() {
         });
 
         // load all data to mange
-        app.get('/products/all', async (req, res) => {
-            const query = {};
-            const cursor = bikeCollection.find(query);
-            const products = await cursor.toArray();
-            res.send(products);
+        app.get('/products/all', verifyUser, async (req, res) => {
+            const headersEmail = req.decoded?.email;
+            const email = req.query.email;
+            if (email === headersEmail) {
+                const query = {};
+                const cursor = bikeCollection.find(query);
+                const products = await cursor.toArray();
+                res.send(products);
+            }
+            else {
+                res.status(403).send({ massage: 'forbidden' })
+            }
         });
 
         //  load data with id
@@ -78,12 +111,18 @@ async function run() {
         });
 
         // get product with query email
-        app.get('/userProducts', async (req, res) => {
+        app.get('/userProducts', verifyUser, async (req, res) => {
+            const headersEmail = req.decoded?.email;
             const email = req.query.email;
-            const query = { email };
-            const cursor =  bikeCollection.find(query);
-            const product = await cursor.toArray();
-            res.send(product);
+            if (email === headersEmail) {
+                const query = { email };
+                const cursor = bikeCollection.find(query);
+                const product = await cursor.toArray();
+                res.send(product);
+            }
+            else {
+                res.status(403).send({ massage: 'forbidden' })
+            }
         })
 
     } finally {
