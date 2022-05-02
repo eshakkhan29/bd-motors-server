@@ -51,7 +51,7 @@ async function run() {
         });
 
         // load all data to mange
-        app.get('/products/all', async (req, res) => {
+        app.get('/products/all', verifyUser, async (req, res) => {
             const headersEmail = req.decoded?.email;
             const email = req.query.email;
             if (email === headersEmail) {
