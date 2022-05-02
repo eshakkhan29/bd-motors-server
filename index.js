@@ -40,7 +40,6 @@ async function run() {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN);
             res.send({ token })
-
         });
 
         //  load all data limited
