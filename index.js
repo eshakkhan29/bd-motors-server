@@ -14,12 +14,12 @@ app.use(express.json());
 const verifyUser = (req, res, next) => {
     const headersToken = req.headers.authorization;
     if (!headersToken) {
-        res.status(401).send({ massage: 'unAuthorize access' })
+        return res.status(401).send({ massage: 'unAuthorize access' })
     }
     const token = headersToken.split(' ')[1];
     jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
         if (err) {
-            res.status(401).send({ massage: 'unAuthorize access' })
+            return res.status(401).send({ massage: 'unAuthorize access' })
         }
         req.decoded = decoded;
         next()
